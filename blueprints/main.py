@@ -129,7 +129,9 @@ def profile():
         "total_attempts": total_attempts,
         "correct_count": correct_count,
         "accuracy": accuracy,
-        "chapter_stats": sorted(chapter_stats, key=lambda x: int(x["id"])),  # 章番号でソート
+        "chapter_stats": sorted(
+            chapter_stats, key=lambda x: int(x["id"])
+        ),  # 章番号でソート
         "weak_chapters": weak_chapters[:3],  # 苦手な章を上位3つ表示
     }
 

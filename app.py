@@ -1,12 +1,23 @@
 from forms import RegistrationForm, LoginForm
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify,
+    flash,
+)
 from summarize import generate_content
 from models import db, Question, User, StudyLog  # ★追加：設計図と学習ログを呼ぶ
-from utils import get_chapters_data, create_ai_prompt # ★追加: 共通関数をインポート
-from flask_migrate import Migrate # ★★★ 追加: データベースマイグレーションツール
-from blueprints.auth import auth_bp # ★追加: 認証Blueprintをインポート
-from blueprints.admin import admin_bp # ★追加: 管理者Blueprintをインポート
-from blueprints.main import main_bp # ★追加: メインBlueprintをインポート
+from utils import get_chapters_data, create_ai_prompt  # ★追加: 共通関数をインポート
+from flask_migrate import Migrate  # ★★★ 追加: データベースマイグレーションツール
+
+# --- Blueprints ---
+from auth import auth_bp
+from blueprints.admin import admin_bp
+from blueprints.main import main_bp
 from flask_login import (
     LoginManager,
     login_user,
@@ -26,7 +37,9 @@ app = Flask(__name__)
 load_dotenv()
 google_genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 # ★修正: ハードコードは避け、環境変数からSECRET_KEYを読み込むのが安全です
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "a-secure-default-key-for-development-only")
+app.config["SECRET_KEY"] = os.getenv(
+    "SECRET_KEY", "a-secure-default-key-for-development-only"
+)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -41,7 +54,10 @@ def before_request_handler():
     if current_user.is_authenticated:
         now_utc = datetime.datetime.utcnow()
         # この機能が追加される前の既存ユーザーのための初期化処理
-        if not hasattr(current_user, "last_token_reset") or current_user.last_token_reset is None:
+        if (
+            not hasattr(current_user, "last_token_reset")
+            or current_user.last_token_reset is None
+        ):
             current_user.last_token_reset = now_utc
             current_user.api_token_count = 100
             db.session.add(current_user)
@@ -77,21 +93,24 @@ def load_user(user_id):
 
 
 db.init_app(app)  # ★追加：アプリとDBを紐付け
-migrate = Migrate(app, db) # ★★★ 追加: アプリとDBをマイグレーションツールに紐付け
+migrate = Migrate(app, db)  # ★★★ 追加: アプリとDBをマイグレーションツールに紐付け
 
 # ★追加: Blueprintの登録
 app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(admin_bp)
 
+
 # ★修正: テンプレート等が url_for('index') を呼んだ場合の互換性対応
 @app.route("/legacy_index_redirect", endpoint="index")
 def legacy_index_redirect():
     return redirect(url_for("main.index"))
 
+
 # ★★★ 削除: Flask-Migrateで管理するため、自動作成は不要になる
 # with app.app_context():
 #     db.create_all()
+
 
 # --- CLIコマンドの定義 ---
 @app.cli.command("init-db")
@@ -99,12 +118,14 @@ def init_db_command():
     """データベーステーブルを作成し、初期データを投入します。"""
     with app.app_context():
         db.create_all()
-        
+
         # questions.json からデータを読み込んで投入
         try:
-            with open(os.path.join(base_dir, 'questions.json'), 'r', encoding='utf-8') as f:
+            with open(
+                os.path.join(base_dir, "questions.json"), "r", encoding="utf-8"
+            ) as f:
                 questions_data = json.load(f)
-                
+
             # データが空の場合のみ追加（簡易的な重複防止）
             if Question.query.count() == 0:
                 for q_data in questions_data:
@@ -130,6 +151,7 @@ def create_test_user_command():
         db.session.add(new_user)
         db.session.commit()
         print("テストユーザー 'testuser' を作成しました。")
+
 
 # --- ★★★ 追加: DB問題オブジェクトを共通辞書形式に変換するヘルパー関数 ★★★ ---
 def normalize_question(q_obj):
@@ -209,7 +231,10 @@ def save_result():
 def ai_quiz():
     # ★追加: トークンチェック
     if current_user.api_token_count <= 0:
-        flash("本日のAI機能の利用上限（100回）に達しました。明日またお試しください。", "warning")
+        flash(
+            "本日のAI機能の利用上限（100回）に達しました。明日またお試しください。",
+            "warning",
+        )
         return redirect(url_for("main.index"))
 
     # 1. どの章の問題を作るか決める（例：ランダムに1〜14章）
@@ -232,7 +257,9 @@ def ai_quiz():
         db.session.commit()
     except Exception as e:
         print(f"AI API Error in ai_quiz: {e}")
-        flash("AIサーバーが応答しませんでした。時間をおいて再度お試しください。", "danger")
+        flash(
+            "AIサーバーが応答しませんでした。時間をおいて再度お試しください。", "danger"
+        )
         return redirect(url_for("main.index"))
 
     # 3. JSONを掃除して辞書に変換（既存のresultのロジックを流用）
@@ -357,7 +384,10 @@ def exercise_specific(question_id):
 def ai_quiz_by_chapter(chapter_id):
     # ★追加: トークンチェック
     if current_user.api_token_count <= 0:
-        flash("本日のAI機能の利用上限（100回）に達しました。明日またお試しください。", "warning")
+        flash(
+            "本日のAI機能の利用上限（100回）に達しました。明日またお試しください。",
+            "warning",
+        )
         return redirect(url_for("incorrect_questions"))
 
     all_chapters = get_chapters_data()
@@ -369,7 +399,7 @@ def ai_quiz_by_chapter(chapter_id):
 
     topic = f"{chapter_info['title']} ({chapter_info['desc']})"
     prompt = create_ai_prompt(topic)
-    
+
     try:
         response_text = generate_content(prompt)
         # ★追加: 成功したらトークンを消費
@@ -378,13 +408,19 @@ def ai_quiz_by_chapter(chapter_id):
         db.session.commit()
     except google_genai.errors.ServerError as e:
         print(f"AI API Server Error: {e}")
-        flash("AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。", "warning")
-        return redirect(url_for('incorrect_questions'))
+        flash(
+            "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。",
+            "warning",
+        )
+        return redirect(url_for("incorrect_questions"))
     except Exception as e:
         print(f"AI問題の生成中に予期せぬエラーが発生しました: {e}")
-        flash("AI問題の生成中に予期せぬエラーが発生しました。しばらくしてからもう一度お試しください。", "danger")
-        return redirect(url_for('incorrect_questions'))
-    
+        flash(
+            "AI問題の生成中に予期せぬエラーが発生しました。しばらくしてからもう一度お試しください。",
+            "danger",
+        )
+        return redirect(url_for("incorrect_questions"))
+
     cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
     try:
         quiz_data = json.loads(cleaned_text)
@@ -404,8 +440,11 @@ def ai_quiz_by_chapter(chapter_id):
         return render_template("exercise.html", q=quiz_data, chapter_id=chapter_id)
     except (json.JSONDecodeError, KeyError) as e:
         print(f"AI問題のJSONパースに失敗しました: {e}")
-        flash("AIが生成した問題の形式が正しくありませんでした。もう一度お試しください。", "danger")
-        return redirect(url_for('incorrect_questions'))
+        flash(
+            "AIが生成した問題の形式が正しくありませんでした。もう一度お試しください。",
+            "danger",
+        )
+        return redirect(url_for("incorrect_questions"))
 
 
 # --- 2. AI出題の結果を表示する役割 (ハイブリッド出題) ---
@@ -415,7 +454,10 @@ def result():
     if request.method == "POST":
         # ★追加: トークンチェック
         if current_user.api_token_count <= 0:
-            flash("本日のAI機能の利用上限（100回）に達しました。明日またお試しください。", "warning")
+            flash(
+                "本日のAI機能の利用上限（100回）に達しました。明日またお試しください。",
+                "warning",
+            )
             return redirect(url_for("main.index"))
 
         prompt = request.form.get("prompt")
@@ -488,7 +530,10 @@ def check_answer():
 def hybrid_quiz():
     # ★追加: トークンチェック (AIモードになる可能性があるので先に行う)
     if current_user.api_token_count <= 0:
-        flash("本日のAI機能の利用上限（100回）に達しました。明日またお試しください。", "warning")
+        flash(
+            "本日のAI機能の利用上限（100回）に達しました。明日またお試しください。",
+            "warning",
+        )
         return redirect(url_for("main.index"))
 
     mode = random.choice(["db", "ai"])
@@ -552,7 +597,10 @@ def exercise(chapter_id):
 
         # 問題数が足りない場合のガード
         if len(questions) < 40:
-            flash("問題が40問に満たないため、模擬テストを開始できません。各章の問題を解いてください。", "warning")
+            flash(
+                "問題が40問に満たないため、模擬テストを開始できません。各章の問題を解いてください。",
+                "warning",
+            )
             return redirect(url_for("main.index"))
 
         # セッションに問題IDリストを保存して、採点時に利用
@@ -569,7 +617,7 @@ def exercise(chapter_id):
     # --- ★ハイブリッド出題ロジック (50%の確率でAI問題) ---
     # 模擬テストや、直前の問題がAI生成だった場合は、DBから問題を取得
     is_from_ai = str(current_id).startswith("ai_")
-    is_mock_test = (chapter_id == "mock") # 模擬テストかどうかを判定
+    is_mock_test = chapter_id == "mock"  # 模擬テストかどうかを判定
     use_ai = random.choices([True, False], weights=[0.5, 0.5], k=1)[0]
 
     if chapter_id != "mock" and not is_from_ai and use_ai:
@@ -579,7 +627,9 @@ def exercise(chapter_id):
             pass
         else:
             all_chapters = get_chapters_data()
-            chapter_info = next((c for c in all_chapters if c["id"] == chapter_id), None)
+            chapter_info = next(
+                (c for c in all_chapters if c["id"] == chapter_id), None
+            )
 
             if chapter_info:
                 topic = f"{chapter_info['title']} ({chapter_info['desc']})"
@@ -621,7 +671,7 @@ def exercise(chapter_id):
                         chapter_id=chapter_id,
                         current_level=None,
                         current_difficulty=difficulty_code,
-                        is_mock=is_mock_test # 模擬テストフラグを渡す
+                        is_mock=is_mock_test,  # 模擬テストフラグを渡す
                     )
                 except (json.JSONDecodeError, KeyError) as e:
                     print(
@@ -659,7 +709,7 @@ def exercise(chapter_id):
         chapter_id=chapter_id,
         current_level=None,  # 章別のときはNoneでOK
         current_difficulty=difficulty_code,  # テンプレートで維持するために渡す
-        is_mock=is_mock_test # 模擬テストフラグを渡す
+        is_mock=is_mock_test,  # 模擬テストフラグを渡す
     )
 
 
@@ -788,13 +838,17 @@ def mock_exam():
         is_mock=True,  # 🏆 タイトル表示用
     )
 
+
 @app.route("/submit_mock_test", methods=["POST"])
 @login_required
 def submit_mock_test():
     """最終模擬テストの結果を受け取り、採点して結果を表示する"""
     question_ids = session.get("mock_test_question_ids")
     if not question_ids:
-        flash("テストセッションの有効期限が切れました。もう一度テストを開始してください。", "warning")
+        flash(
+            "テストセッションの有効期限が切れました。もう一度テストを開始してください。",
+            "warning",
+        )
         return redirect(url_for("main.index"))
 
     user_answers_from_form = request.form
@@ -814,7 +868,9 @@ def submit_mock_test():
             continue
 
         # フォームから送られてきたユーザーの解答を取得
-        user_answer_choice = user_answers_from_form.get(f"question_{q_id}")  # 例: 'a', 'b', 'c', 'd'
+        user_answer_choice = user_answers_from_form.get(
+            f"question_{q_id}"
+        )  # 例: 'a', 'b', 'c', 'd'
         is_correct = user_answer_choice == question.answer.lower()
 
         if is_correct:
@@ -831,11 +887,21 @@ def submit_mock_test():
         db.session.add(log)
 
         # 結果表示テンプレートに渡すためのデータを整形
-        options_map = {"a": question.choice_a, "b": question.choice_b, "c": question.choice_c, "d": question.choice_d}
+        options_map = {
+            "a": question.choice_a,
+            "b": question.choice_b,
+            "c": question.choice_c,
+            "d": question.choice_d,
+        }
         user_answer_text = options_map.get(user_answer_choice, "未解答")
 
         results_for_template.append(
-            {"question": question, "user_answer_choice": user_answer_choice, "user_answer_text": user_answer_text, "is_correct": is_correct}
+            {
+                "question": question,
+                "user_answer_choice": user_answer_choice,
+                "user_answer_text": user_answer_text,
+                "is_correct": is_correct,
+            }
         )
 
     # DBへの変更を確定
@@ -846,7 +912,14 @@ def submit_mock_test():
     total_questions = len(question_ids)
     score = (correct_count / total_questions) * 100 if total_questions > 0 else 0
 
-    return render_template("mock_test_result.html", results=results_for_template, total_questions=total_questions, correct_count=correct_count, score=score)
+    return render_template(
+        "mock_test_result.html",
+        results=results_for_template,
+        total_questions=total_questions,
+        correct_count=correct_count,
+        score=score,
+    )
+
 
 @app.route("/get_ai_explanation", methods=["POST"])
 @login_required
@@ -858,8 +931,10 @@ def get_ai_explanation():
         data = request.get_json()
         # ★追加: トークンチェック
         if current_user.api_token_count <= 0:
-            return jsonify({"error": "本日のAI機能の利用上限に達しました。"}), 429 # Too Many Requests
-
+            return (
+                jsonify({"error": "本日のAI機能の利用上限に達しました。"}),
+                429,
+            )  # Too Many Requests
 
         if not data:
             return jsonify({"error": "リクエストが無効です。"}), 400
@@ -869,7 +944,9 @@ def get_ai_explanation():
         answer = data.get("answer", "")
         explanation = data.get("explanation", "")
 
-        options_text = "\n".join([f"{chr(97+i)}. {opt}" for i, opt in enumerate(options)])
+        options_text = "\n".join(
+            [f"{chr(97+i)}. {opt}" for i, opt in enumerate(options)]
+        )
 
         prompt = f"""
 あなたは経験豊富なPython講師です。
@@ -912,7 +989,7 @@ def get_ai_explanation():
 
         if not response.parts:
             return jsonify({"error": "AIが回答を生成できませんでした。"}), 500
-        
+
         # ★追加: 成功したらトークンを消費
         current_user.api_token_count -= 1
         db.session.add(current_user)
@@ -921,10 +998,25 @@ def get_ai_explanation():
         return jsonify({"explanation": response.text})
     except google_genai.errors.ServerError as e:
         print(f"AI API Server Error: {e}")
-        return jsonify({"error": "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。"}), 503
+        return (
+            jsonify(
+                {
+                    "error": "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。"
+                }
+            ),
+            503,
+        )
     except Exception as e:
         print(f"AI解説の生成中に予期せぬエラーが発生しました: {e}")
-        return jsonify({"error": "AI解説の生成中に予期せぬエラーが発生しました。しばらくしてからもう一度お試しください。"}), 500
+        return (
+            jsonify(
+                {
+                    "error": "AI解説の生成中に予期せぬエラーが発生しました。しばらくしてからもう一度お試しください。"
+                }
+            ),
+            500,
+        )
+
 
 if __name__ == "__main__":
     # use_reloader=False を追加して、自動再起動をオフにする
