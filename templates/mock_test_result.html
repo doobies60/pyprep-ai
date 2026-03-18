@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}模擬テスト結果 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">🏆 模擬テスト 結果発表</h1>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-body p-5 text-center">
+                    <h3 class="card-title">総合スコア</h3>
+                    <p class="display-4 fw-bold 
+                        {% if score >= 80 %} text-success 
+                        {% elif score >= 60 %} text-warning
+                        {% else %} text-danger {% endif %}">
+                        {{ "%.1f"|format(score) }}<small>%</small>
+                    </p>
+                    <p class="fs-4">
+                        <strong>{{ correct_count }}</strong> / {{ total_questions }} 問 正解
+                    </p>
+                    <div class="progress mt-3" style="height: 25px;">
+                        <div class="progress-bar 
+                            {% if score >= 80 %} bg-success 
+                            {% elif score >= 60 %} bg-warning
+                            {% else %} bg-danger {% endif %}" 
+                            role="progressbar" style="width: {{ score }}%;" aria-valuenow="{{ score }}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                    {% if score >= 80 %}
+                        <p class="mt-3 fs-5 text-success">素晴らしい！合格ラインです！</p>
+                    {% elif score >= 60 %}
+                        <p class="mt-3 fs-5 text-warning">あと一歩！苦手な分野を復習しましょう。</p>
+                    {% else %}
+                        <p class="mt-3 fs-5 text-danger">残念！基礎からもう一度復習が必要です。</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="fw-bold mb-4">全問題の解答と解説</h2>
+    {% for res in results %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header {% if res.is_correct %}bg-success-subtle{% else %}bg-danger-subtle{% endif %}">
+            <strong>問題 {{ loop.index }}</strong>
+            {% if res.is_correct %}
+                <span class="badge bg-success float-end">正解</span>
+            {% else %}
+                <span class="badge bg-danger float-end">不正解</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <h5 class="card-title mb-3" style="line-height: 1.7; white-space: pre-wrap;">{{ res.question.question }}</h5>
+            
+            <p>あなたの解答: 
+                <strong class="{% if not res.is_correct %}text-danger{% endif %}">
+                    {{ res.user_answer_text }}
+                </strong>
+            </p>
+            {# res.question.options リストから正解のテキストを取得するように修正 #}
+            <p>正解: <strong>{{ res.question.answer }}. {{ {'A': res.question.options[0], 'B': res.question.options[1], 'C': res.question.options[2], 'D': res.question.options[3]}[res.question.answer] }}</strong></p>
+            
+            <hr>
+            <h6 class="fw-bold">💡 解説:</h6>
+            <p>{{ res.question.common_explanation }}</p>
+
+            <div class="accordion" id="accordion-{{ res.question.id }}">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="heading-{{ res.question.id }}">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ res.question.id }}" aria-expanded="false" aria-controls="collapse-{{ res.question.id }}">
+                    各選択肢の解説を見る
+                  </button>
+                </h2>
+                <div id="collapse-{{ res.question.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ res.question.id }}" data-bs-parent="#accordion-{{ res.question.id }}">
+                  <div class="accordion-body">
+                    {# res.question.individual_explanations リストをループして表示するように修正 #}
+                    {% if res.question.individual_explanations %}
+                    <ul class="list-group">
+                        {% for explanation in res.question.individual_explanations %}
+                        <li class="list-group-item">{{ explanation if explanation else '(この選択肢に関する個別の解説はありません。)' }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">TOPに戻る</a>
+        <a href="{{ url_for('incorrect_questions') }}" class="btn btn-warning btn-lg">間違えた問題に再挑戦する</a>
+    </div>
+</div>
+<style>
+    .bg-success-subtle { background-color: #d1e7dd; }
+    .bg-danger-subtle { background-color: #f8d7da; }
+</style>
+{% endblock %}

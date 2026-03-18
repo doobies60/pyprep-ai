@@ -1,0 +1,30 @@
+
+【2026-02-06 開発メモ】
+■ 現在の状況
+・Gemini 2.5 Flash-Liteへの接続成功（google-genaiを使用）。
+・ターミナルには問題のJSONデータが表示されている。
+・ブラウザでは項目名だけ出て、中身（問題文など）が空っぽの状態。
+
+■ 明日やること
+1. app.py の render_template("result.html", quiz=quiz_data) の名前を確認。
+2. result.html の {{ quiz.question }} などの記述を app.py と合わせる。
+3. 画面に問題が表示されることを確認！
+
+■ 重要な設定
+・ライブラリ: from google import genai
+・クライアント: client = genai.Client(api_key=...)
+
+本日の修正: 1. summarize.py で "answer" を出力させるようにプロンプト変更。 2. result.html に checkAnswer 関数を追加し、ボタンクリックで正誤判定＋解説表示を実装。
+
+次回の確認事項: * ボタンを押したときに解説がパッと出るか？
+
+Geminiがちゃんと options の中のどれかを answer に入れているか？
+
+
+2/26
+📝 本日の進捗まとめ（保存用）
+アプリ名決定: 🐍Python3エンジニア認定基礎試験 徹底攻略
+
+画面: TOP画面、問題演習画面（個別解説対応）が完成
+
+ロジック: use_reloader=False による無限再起動回避、current_id による重複出題防止

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}ユーザープロファイル - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    {# アバター画像は後で追加できます #}
+                    <i class="fas fa-user-circle fa-6x text-secondary mb-3"></i>
+                    <h4 class="card-title">{{ user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary btn-sm">ログアウト</a>
+                </div>
+            </div>
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header">
+                    <strong>総合学習データ</strong>
+                </div>
+                <div class="card-body">
+                    {% if stats %}
+                        <p>総解答数: <strong>{{ stats.total_attempts }} 問</strong></p>
+                        <p>正解数: <strong>{{ stats.correct_count }} 問</strong></p>
+                        <p class="mb-1">全体正解率</p>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ stats.accuracy }}%;" aria-valuenow="{{ stats.accuracy }}" aria-valuemin="0" aria-valuemax="100">
+                                <strong>{{ "%.1f"|format(stats.accuracy) }}%</strong>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('incorrect_questions') }}" class="btn btn-warning w-100 mt-4">
+                            <i class="fas fa-redo-alt"></i> 間違えた問題に再挑戦
+                        </a>
+                    {% else %}
+                        <p class="text-muted">まだ学習履歴がありません。</p>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary w-100">学習を始める</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong>章ごとの正解率</strong>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if stats and stats.chapter_stats %}
+                        <ul class="list-group list-group-flush">
+                        {% for chapter in stats.chapter_stats %}
+                            <li class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ chapter.title }}</h6>
+                                    <small class="text-muted">{{ chapter.correct }} / {{ chapter.total }} 問</small>
+                                </div>
+                                <div class="progress mt-1" style="height: 10px;">
+                                    <div class="progress-bar" role="progressbar" style="width: {{ chapter.percent }}%;" aria-valuenow="{{ chapter.percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">学習データがありません。</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow-sm">
+                <div class="card-header">
+                    <strong><i class="fas fa-bullseye"></i> 苦手な分野 Top 3</strong>
+                </div>
+                <div class="card-body">
+                    {% if stats and stats.weak_chapters %}
+                        <p>正解率が低い章から再挑戦してみましょう。</p>
+                        <div class="list-group">
+                        {% for chapter in stats.weak_chapters %}
+                            <a href="{{ url_for('exercise', chapter_id=chapter.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                {{ chapter.title }}
+                                <span class="badge bg-danger rounded-pill">{{ "%.0f"|format(chapter.percent) }}%</span>
+                            </a>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">素晴らしい！現在、苦手な分野は見つかりませんでした。</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

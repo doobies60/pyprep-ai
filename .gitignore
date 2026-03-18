@@ -1,0 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment variables (API Key etc.)
+.env
+
+# Database
+*.db
+*.sqlite3
+instance/
+
+# Virtual Environment
+venv/
+.venv/

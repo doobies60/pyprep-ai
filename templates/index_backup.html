@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-5">🐍 Python3 基礎演習アカデミー</h1>
+        <p class="text-muted">あなたのレベルに合わせて、確実にステップアップ。</p>
+    </div>
+
+    <div class="row g-4">
+        {% for chapter in chapters %}
+        <div class="col-md-4">
+            {# 難易度判定（chapter.level として app.py から送る場合） #}
+            {% set level_class = 'level-1' if chapter.level == 1 else 'level-2' if chapter.level == 2 else 'level-3' %}
+            {% set level_label = 'BEGINNER' if chapter.level == 1 else 'INTERMEDIATE' if chapter.level == 2 else 'ADVANCED' %}
+
+            <div class="card h-100 academy-card {{ level_class }}">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="chapter-number">CH.{{ chapter.id }}</span>
+                        <span class="level-badge">{{ level_label }}</span>
+                    </div>
+                    <h5 class="card-title fw-bold mb-4">{{ chapter.title }}</h5>
+                    <div class="mt-auto">
+                        <a href="{{ url_for('get_question', chapter_id=chapter.id) }}" class="btn-academy">
+                            演習を開始する <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row g-4 mt-4">
+    <!-- 既存のDBランダム演習（例） -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body p-4 text-center">
+                <div class="mb-3 text-primary">
+                    <i class="fas fa-database fa-3x"></i>
+                </div>
+                <h4 class="fw-bold">公式DBランダム演習</h4>
+                <p class="text-muted">登録されている過去問からランダムに出題します。</p>
+                <a href="{{ url_for('level_exercise', level=1) }}" class="btn btn-primary w-100 fw-bold py-2">
+                    挑戦する
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ★追加：AI生成演習 -->
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-0" style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);">
+            <div class="card-body p-4 text-center border border-2 border-primary rounded-3">
+                <div class="mb-3" style="color: #8b5cf6;">
+                    <i class="fas fa-robot fa-3x"></i>
+                </div>
+                <h4 class="fw-bold" style="color: #5b21b6;">✨ AI生成チャレンジ</h4>
+                <p class="text-muted">Gemini AIがあなたのレベルに合わせて新しい問題をその場で作成します。</p>
+                <a href="{{ url_for('ai_quiz') }}" class="btn fw-bold py-2 w-100 text-white shadow" style="background-color: #8b5cf6;">
+                    AIに問題を作らせる
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* チープさを消すためのカスタムCSS */
+    .academy-card {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .academy-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .chapter-number {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #adb5bd;
+    }
+    .level-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 50px;
+        letter-spacing: 1px;
+    }
+    /* レベル別カラー（高級感のある色味） */
+    .level-1 { border-top: 5px solid #2ecc71; }
+    .level-1 .level-badge { background: #eafaf1; color: #2ecc71; }
+    
+    .level-2 { border-top: 5px solid #3498db; }
+    .level-2 .level-badge { background: #ebf5fb; color: #3498db; }
+    
+    .level-3 { border-top: 5px solid #e74c3c; }
+    .level-3 .level-badge { background: #fdedec; color: #e74c3c; }
+
+    .btn-academy {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        background: #2d3436;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .btn-academy:hover { background: #000000; color: #fff; }
+
+    .btn-random {
+        display: block;
+        text-decoration: none;
+        color: white;
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-random:hover {
+        transform: scale(1.03);
+        color: white;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .level-1-bg { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .level-2-bg { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .level-3-bg { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+</style>
+
+{% endblock %}

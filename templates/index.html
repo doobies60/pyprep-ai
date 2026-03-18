@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold display-5">🐍 Python3 基礎演習アカデミー</h1>
+        <h3 class="text-muted">Python 3 エンジニア認定基礎試験合格支援サイト</h3>
+        {% if current_user.is_authenticated %}
+        <div class="mt-3">
+            <span class="badge bg-info text-dark fs-6 px-3 py-2 shadow-sm"><i class="fas fa-robot me-2"></i>本日のAI機能残り: {{ current_user.api_token_count }} 回</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {# レベル別ランダム演習セクション #}
+    <h3 class="fw-bold mb-4">🎲 レベル別ランダム演習</h3>
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <a href="{{ url_for('level_exercise', level=1) }}" class="btn-random d-block p-4 text-center level-1-bg">
+                <h4 class="fw-bold">初級</h4>
+                <p class="mb-0">基本文法とデータ構造</p>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('level_exercise', level=2) }}" class="btn-random d-block p-4 text-center level-2-bg">
+                <h4 class="fw-bold">中級</h4>
+                <p class="mb-0">関数、モジュール、データ構造の応用</p>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{{ url_for('level_exercise', level=3) }}" class="btn-random d-block p-4 text-center level-3-bg">
+                <h4 class="fw-bold">上級</h4>
+                <p class="mb-0">クラス、標準ライブラリの高度な使い方</p>
+            </a>
+        </div>
+    </div>
+
+    <h3 class="fw-bold mb-4">📚 章別演習</h3>
+    <div class="row g-4">
+        {% for chapter in chapters %}
+        {% if chapter.id != 'mock' %} {# 模擬テストは下で個別表示するのでスキップ #}
+        <div class="col-md-4">
+            {# 難易度判定 #}
+            {% set level_class = 'level-1' if chapter.level == 1 else 'level-2' if chapter.level == 2 else 'level-3' %}
+            {% set level_label = '初級' if chapter.level == 1 else '中級' if chapter.level == 2 else '上級' %}
+
+            {# ★カードに position-relative を追加 #}
+            <div class="card h-100 academy-card {{ level_class }} position-relative">
+                
+                {# --- ★完了マークの表示 --- #}
+                {% if chapter.is_completed %}
+                <div class="completed-badge">
+                    <i class="fas fa-check-circle"></i> 完了
+                </div>
+                {% endif %}
+
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="chapter-number">CH.{{ chapter.id }}</span>
+                        <span class="level-badge">{{ level_label }}</span>
+                    </div>
+                    <h5 class="card-title fw-bold mb-2">{{ chapter.title }}</h5>
+                    <p class="text-muted small mb-4">{{ chapter.desc }}</p>
+
+                    {# --- ★進捗バーの表示 (ログイン時のみ) --- #}
+                    {% if current_user.is_authenticated and chapter.progress_percent is defined %}
+                    <div class="progress-wrapper mt-auto mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="progress-label">正解率</span>
+                            <span class="progress-value fw-bold">{{ chapter.progress_percent }}%</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: {{ chapter.progress_percent }}%;" aria-valuenow="{{ chapter.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+
+                    <div class="mt-2"> {# ★プログレスバーとの間隔調整 #}
+                        {# d-gridに加えてdropupクラスを追加し、メニューが上に開くように変更 #}
+                        <div class="d-grid dropup">
+                            <button type="button" class="btn-academy dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" {% if not chapter.available_difficulties %}disabled{% endif %}>
+                                {% if chapter.available_difficulties %}
+                                    演習を開始する
+                                {% else %}
+                                    （問題準備中）
+                                {% endif %}
+                            </button>
+                            <ul class="dropdown-menu w-100 text-center shadow border-0">
+                                {# バックエンドから渡された利用可能な難易度だけを動的に表示します #}
+                                {% if chapter.available_difficulties %}
+                                    {% set emoji_map = {'初級': '🐣', '中級': '🐥', '上級': '🐔'} %}
+                                    {% for diff in chapter.available_difficulties %}
+                                        <li><a class="dropdown-item py-2" href="{{ url_for('exercise', chapter_id=chapter.id, difficulty=diff.code) }}">{{ emoji_map.get(diff.name_jp, '') }} {{ diff.name_jp }}</a></li>
+                                    {% endfor %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item py-2 fw-bold" href="{{ url_for('exercise', chapter_id=chapter.id) }}">🎲 全難易度</a></li>
+                                {% else %}
+                                    <li><span class="dropdown-item-text text-muted py-2 d-block">問題がありません</span></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    {# 模擬テスト用の特別セクション #}
+    <div class="row mt-5">
+        <div class="col">
+            <div class="card text-center p-4 shadow-lg" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <div class="card-body">
+                    <h2 class="card-title fw-bold">🏆 最終模擬テスト</h2>
+                    <p class="lead">全範囲からランダムに出題される40問形式の総合テストで実力を試そう！</p>
+                    <a href="{{ url_for('exercise', chapter_id='mock') }}" class="btn btn-light btn-lg fw-bold px-5 mt-3">
+                        挑戦する
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    /* チープさを消すためのカスタムCSS */
+    .completed-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background-color: #2ecc71;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .academy-card {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    .academy-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+    .chapter-number {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #adb5bd;
+    }
+    .level-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 50px;
+        letter-spacing: 1px;
+    }
+    /* レベル別カラー（高級感のある色味） */
+    .level-1 { border-top: 5px solid #2ecc71; }
+    .level-1 .level-badge { background: #eafaf1; color: #2ecc71; }
+    
+    .level-2 { border-top: 5px solid #3498db; }
+    .level-2 .level-badge { background: #ebf5fb; color: #3498db; }
+    
+    .level-3 { border-top: 5px solid #e74c3c; }
+    .level-3 .level-badge { background: #fdedec; color: #e74c3c; }
+
+    .btn-academy {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        text-align: center;
+        background: #2d3436;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: background 0.2s;
+    }
+    .btn-academy:hover { background: #000000; color: #fff; }
+
+    .btn-random {
+        display: block;
+        text-decoration: none;
+        color: white;
+        border-radius: 12px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-random:hover {
+        transform: scale(1.03);
+        color: white;
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .level-1-bg { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .level-2-bg { background: linear-gradient(135deg, #3498db, #2980b9); }
+    .level-3-bg { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+
+    /* プログレスバー関連 */
+    .progress-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    .progress-bar {
+        background-color: #3498db;
+    }
+</style>
+{% endblock %}

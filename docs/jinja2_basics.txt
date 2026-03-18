@@ -1,0 +1,1 @@
+return render_template("file.html", a=b) と書いたら、HTML側では {{ a }} で呼び出す。{{ b }} ではない。

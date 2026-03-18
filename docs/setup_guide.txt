@@ -1,0 +1,4 @@
+ModuleNotFoundError や 404 が出るときは、まず pwd（現在の場所確認）をして、正しいフォルダにいるかチェックする。
+
+検証モードを起動する
+streamlit run check_db.py

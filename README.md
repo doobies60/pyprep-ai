@@ -23,7 +23,7 @@ Backend: Python 3.12 / Flask
 
 Database: SQLite / SQLAlchemy (ORM)
 
-AI Integration: Google Gemini 2.5 flash-lite
+AI Integration: Google Gemini 3.1 flash-lite
 
 Frontend: Jinja2 / CSS3 (Responsive Design)
 

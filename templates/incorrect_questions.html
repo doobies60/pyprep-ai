@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}間違えた問題一覧{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">間違えた問題一覧</h1>
+
+    {% if questions %}
+    <div class="list-group">
+        {% for q in questions %}
+        <div class="list-group-item list-group-item-action flex-column align-items-start mb-3">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">
+                    {% if q.type == 'db' %}
+                        DB問題 (ID: {{ q.question_id }})
+                    {% else %}
+                        AI生成問題 (章: {{ q.chapter_title }})
+                    {% endif %}
+                </h5>
+                <small class="text-muted">{{ q.timestamp.strftime('%Y/%m/%d %H:%M') }}</small>
+            </div>
+            <p class="mb-1">
+                {% if q.type == 'db' %}
+                    {{ q.question_text | truncate(100) }}
+                {% else %}
+                    {{ q.display_text }}
+                {% endif %}
+            </p>
+            <small class="text-muted">あなたの回答: {{ q.user_answer | upper }}</small>
+            {% if q.type == 'db' %}
+                <small class="text-muted"> / 正解: {{ q.correct_answer | upper }}</small>
+            {% endif %}
+            <div class="mt-2">
+                <a href="{{ q.re_attempt_url }}" class="btn btn-primary btn-sm">再挑戦する</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        まだ間違えた問題はありません。素晴らしい！
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

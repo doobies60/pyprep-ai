@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}診断結果{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg border-0 mt-4">
+    <div class="card-header bg-success text-white">
+        <h2 class="mb-0">AIからの挑戦状</h2>
+    </div>
+    <div class="card-body">
+        <h4 class="card-title text-primary mb-4">{{ quiz.question }}</h4>
+        
+        <div class="list-group mb-4">
+            <button class="list-group-item list-group-item-action">A: {{ quiz.choice_a }}</button>
+            <button class="list-group-item list-group-item-action">B: {{ quiz.choice_b }}</button>
+            <button class="list-group-item list-group-item-action">C: {{ quiz.choice_c }}</button>
+            <button class="list-group-item list-group-item-action">D: {{ quiz.choice_d }}</button>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>正解: {{ quiz.answer }}</strong><br>
+            <p class="mt-2">{{ quiz.explanation }}</p>
+        </div>
+
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">TOPに戻る</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+    <h1 class="fw-bold mb-4">📊 {{ title }}</h1>
+
+    {% if stats %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">総ユーザー数</h5>
+                    <p class="display-6 fw-bold">{{ stats.total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">総解答数</h5>
+                    <p class="display-6 fw-bold">{{ stats.total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card text-center shadow-sm bg-primary-subtle h-100">
+                <div class="card-body">
+                    <h5 class="card-title">全ユーザー平均正解率</h5>
+                    <p class="display-6 fw-bold">{{ "%.1f"|format(stats.overall_accuracy) }}<small>%</small></p>
+                    <small>({{ stats.total_correct }} / {{ stats.total_attempts }} 問)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="fw-bold mt-5 mb-3">ユーザー別 成績一覧</h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">ユーザー名</th>
+                        <th scope="col">解答数</th>
+                        <th scope="col">正解数</th>
+                        <th scope="col" style="min-width: 150px;">正解率</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_stat in stats.user_stats %}
+                    <tr>
+                        <th scope="row">{{ loop.index }}</th>
+                        <td>{{ user_stat.username }}</td>
+                        <td>{{ user_stat.total }}</td>
+                        <td>{{ user_stat.correct }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;" title="{{ "%.1f"|format(user_stat.accuracy) }}%">
+                                <div class="progress-bar {% if user_stat.accuracy >= 70 %}bg-success{% elif user_stat.accuracy >= 50 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ user_stat.accuracy }}%;" aria-valuenow="{{ user_stat.accuracy }}" aria-valuemin="0" aria-valuemax="100">
+                                    {{ "%.1f"|format(user_stat.accuracy) }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="alert alert-info" role="alert">
+        まだ学習履歴がありません。
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-5">
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">TOPに戻る</a>
+    </div>
+</div>
+{% endblock %}

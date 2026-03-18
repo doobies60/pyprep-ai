@@ -21,11 +21,12 @@ import json
 import random
 
 app = Flask(__name__)
-app.secret_key = "pyprep_ai_secret"  # ★追加：ログイン状態の保持に必要
 
 # ★追加: 環境変数を読み込み、AIのAPIキーを設定
 load_dotenv()
 google_genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# ★修正: ハードコードは避け、環境変数からSECRET_KEYを読み込むのが安全です
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "a-secure-default-key-for-development-only")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -906,7 +907,7 @@ def get_ai_explanation():
 それでは、上記の指示に従って「深掘り解説」を生成してください。
 """
         # ★修正: モデル名を最新のものに更新し、安定性を向上
-        model = google_genai.GenerativeModel("gemini-2.5-flash-lite")
+        model = google_genai.GenerativeModel("gemini-3.1-flash-lite")
         response = model.generate_content(prompt)
 
         if not response.parts:

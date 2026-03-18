@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}最終模擬テスト - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark">
+            <span class="me-2">🏆</span>最終模擬テスト (40問)
+        </h2>
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary" id="exit-mock-test-btn">テストを中断する</a>
+    </div>
+
+    <div class="card shadow-sm mb-4 border-0 sticky-top" style="top: 10px; z-index: 1020;">
+        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>残り時間</h5>
+            <h4 class="mb-0" id="mock-test-timer">60:00</h4>
+        </div>
+    </div>
+
+    <form id="mock-test-form" method="POST" action="{{ url_for('submit_mock_test') }}">
+        {% for q in questions %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <strong>問題 {{ loop.index }}</strong>
+                <span class="badge rounded-pill bg-secondary float-end p-2 px-3">{{ q.difficulty }}</span>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title mb-4" style="line-height: 1.7; white-space: pre-wrap;">
+                    <span class="d-block text-muted fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>
+                    {{ q.question }}
+                </h5>
+                
+                <div class="list-group">
+                    {% for option in q.options %}
+                    <label class="list-group-item list-group-item-action">
+                        <input class="form-check-input me-2" type="radio" name="question_{{ q.id }}" value="{{ ['a', 'b', 'c', 'd'][loop.index0] }}">
+                        {{ ['A', 'B', 'C', 'D'][loop.index0] }}. {{ option }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-grid gap-2 mt-5">
+            <button type="submit" class="btn btn-primary btn-lg fw-bold">テストを採点する</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const MOCK_TEST_DURATION = 60 * 60; // 60 minutes in seconds
+    const form = document.getElementById('mock-test-form');
+    let timerInterval;
+
+    function formatTime(seconds) {
+        if (seconds < 0) seconds = 0;
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+    }
+
+    function updateMockTestTimer() {
+        const timerDisplay = document.getElementById('mock-test-timer');
+        if (!timerDisplay) return;
+
+        let startTime = sessionStorage.getItem('mockTestStartTime');
+        if (!startTime) {
+            startTime = Date.now();
+            sessionStorage.setItem('mockTestStartTime', startTime);
+        } else {
+            startTime = parseInt(startTime, 10);
+        }
+
+        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+        const timeLeft = MOCK_TEST_DURATION - elapsedTime;
+
+        timerDisplay.innerText = formatTime(timeLeft);
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("時間切れです！テストを自動的に提出します。");
+            form.submit();
+        }
+    }
+
+    document.getElementById('exit-mock-test-btn').addEventListener('click', (e) => {
+        if (confirm('テストを中断しますか？解答内容は保存されません。')) {
+            sessionStorage.removeItem('mockTestStartTime');
+        } else {
+            e.preventDefault();
+        }
+    });
+    
+    form.addEventListener('submit', () => {
+        sessionStorage.removeItem('mockTestStartTime');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateMockTestTimer();
+        timerInterval = setInterval(updateMockTestTimer, 1000);
+    });
+</script>
+{% endblock %}

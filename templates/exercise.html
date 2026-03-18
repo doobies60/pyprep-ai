@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <h2 class="fw-bold text-dark">
+            <span class="me-2">🐍</span>Python3 基礎演習アカデミー
+        </h2>
+    </div>
+
+    <div class="card-header bg-light border-bottom-0 pt-4 px-4">
+        <div class="d-flex align-items-center justify-content-between">
+            <h5 class="mb-0 text-secondary">
+                <i class="fas fa-info-circle me-2"></i>
+                <span class="text-primary">問題情報</span>
+                
+                {# --- バッジ表示の修正箇所 --- #}
+                {% if q.is_ai == True %}
+                    <span class="badge rounded-pill ms-2" style="background-color: #8b5cf6; color: white;">✨ AI生成問題</span>
+                {% else %}
+                    <span class="badge rounded-pill bg-light text-secondary border ms-2">📚 公式DB</span>
+                {% endif %}
+                {# ---------------------------- #}
+            </h5>
+
+            <span class="badge rounded-pill 
+                {% if q.difficulty == '初級' %} bg-success 
+                {% elif q.difficulty == '中級' %} bg-primary 
+                {% elif q.difficulty == '上級' %} bg-danger 
+                {% else %} bg-secondary {% endif %} p-2 px-3">
+                {{ q.difficulty if q.difficulty else '標準' }}
+            </span>
+        </div>
+    </div>
+        
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-4">
+            
+            <div class="mb-5">
+                <h4 class="fw-bold" style="line-height: 1.6; white-space: pre-wrap;">
+                    <span class="d-block text-primary fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>
+                    {{ q.question }}
+                </h4>
+            </div>
+
+            <div class="list-group gap-3 mb-4">
+                {% for label in ['a', 'b', 'c', 'd'] %}
+                <div class="border rounded p-3 choice-container" id="container-{{ label }}">
+                    <button type="button" class="btn btn-outline-primary fw-bold px-4 py-2 w-100 text-start action-btn" onclick="submitAnswer('{{ label }}')">
+                        {{ label | upper }}. {{ q.options[loop.index0] }}
+                    </button>
+                    
+                    {# 個別解説がある場合（DB問題など）のみ表示 #}
+                    {% if q.individual_explanations and q.individual_explanations[loop.index0] %}
+                    <div class="explanation-box mt-3 p-2 bg-light rounded small text-muted border-start border-3 border-info" id="exp-{{ label }}" style="display:none;">
+                        {{ q.individual_explanations[loop.index0] }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- 判定・全体解説エリア -->
+            <div id="result-display" class="mt-5 p-4 rounded text-center shadow-sm" style="display:none; border: 2px solid #ddd;">
+                <h2 id="result-emoji" class="display-4 mb-2"></h2>
+                <h3 id="result-text" class="fw-bold mb-3"></h3>
+                <hr>
+                <div class="text-start mt-3 mb-4">
+                    <h6 class="fw-bold">💡 解説:</h6>
+                    <p class="text-muted small">（この解説は「{{ q.chapter_name }}」の内容に基づいています）</p>
+                    <p>{{ q.explanation }}</p>
+                </div>
+                
+                <div id="original-nav-buttons" class="d-flex justify-content-center gap-3 mt-4">
+                    <button onclick="loadNextQuestion()" class="btn btn-lg btn-success px-5 shadow fw-bold">
+                        次の問題へ
+                    </button>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-lg btn-outline-secondary px-5 shadow fw-bold">
+                        TOPに戻る
+                    </a>
+                </div>
+
+                <!-- AI解説ボタンと表示エリア -->
+                <div class="mt-4 pt-4 border-top">
+                    <div class="text-center">
+                        <button id="ai-explanation-btn" class="btn btn-outline-primary" onclick="getAiExplanation()">
+                            <i class="fas fa-robot me-2"></i>AIによる深掘り解説を見る
+                        </button>
+                        <div id="ai-explanation-spinner" class="spinner-border text-primary mt-3" role="status" style="display: none;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div id="ai-explanation-area" class="mt-3 p-3 bg-light rounded text-start" style="display: none; white-space: pre-wrap; word-wrap: break-word;"></div>
+                        <!-- ▼▼▼ ボタン複製用エリア ▼▼▼ -->
+                        <div id="ai-explanation-navigation" class="mt-4"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function submitAnswer(userChoice) {
+    const correctAnswer = "{{ q.answer }}".toLowerCase(); // DBからの大文字回答(例:A)とJSの小文字(例:a)を揃える
+    const isCorrect = (userChoice === correctAnswer);
+    
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.onclick = null;
+        btn.classList.add('opacity-50');
+    });
+
+    document.querySelectorAll('.explanation-box').forEach(el => el.style.display = 'block');
+    
+    const resultDisplay = document.getElementById('result-display');
+    resultDisplay.style.display = 'block';
+    
+    if (isCorrect) {
+        document.getElementById('result-emoji').innerText = "✨";
+        document.getElementById('result-text').innerText = "正解です！";
+        resultDisplay.classList.add('bg-success-subtle', 'text-success');
+        document.getElementById('container-' + userChoice).classList.add('bg-success-subtle', 'border-success', 'border-3');
+    } else {
+        document.getElementById('result-emoji').innerText = "❌";
+        document.getElementById('result-text').innerText = "不正解です...";
+        resultDisplay.classList.add('bg-danger-subtle', 'text-danger');
+        document.getElementById('container-' + userChoice).classList.add('bg-danger-subtle', 'border-danger');
+        document.getElementById('container-' + correctAnswer).classList.add('border-success', 'border-3');
+    }
+
+    // --- 学習ログを正しく保存するための修正 ---
+    const body = new URLSearchParams();
+    body.append('question_id', "{{ q.id }}");
+    body.append('answer', userChoice); // バックエンド(app.py)の'answer'キーに合わせる
+    body.append('is_correct', isCorrect);
+
+    fetch('/save_result', {
+        method: 'POST',
+        // バックエンドがrequest.formで受け取れるようにContent-Typeを修正
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+    });
+}
+
+function getAiExplanation() {
+    const aiBtn = document.getElementById('ai-explanation-btn');
+    const spinner = document.getElementById('ai-explanation-spinner');
+    const explanationArea = document.getElementById('ai-explanation-area');
+
+    // ボタンを無効化し、スピナーを表示
+    aiBtn.disabled = true;
+    aiBtn.innerHTML = `<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span> 解説を生成中...`;
+    spinner.style.display = 'block';
+    explanationArea.style.display = 'none';
+
+    // tojsonフィルタで安全にJSオブジェクトに変換
+    const questionData = {
+        question: {{ q.question | tojson }},
+        options: {{ q.options | tojson }},
+        answer: {{ q.answer | tojson }},
+        explanation: {{ q.explanation | tojson }},
+        chapter: {{ q.chapter | tojson }},
+        difficulty: {{ q.difficulty | tojson }}
+    };
+
+    fetch('/get_ai_explanation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(questionData)
+    })
+    .then(response => {
+        // HTTPステータスが 200-299 の範囲外の場合、エラーとして処理
+        if (!response.ok) {
+            // サーバーから返されたJSONエラーメッセージを試みる
+            return response.json().then(err => {
+                throw new Error(err.error || `サーバーエラー (Status: ${response.status})`);
+            }).catch(() => {
+                // JSONのパースに失敗した場合のフォールバック
+                throw new Error(`サーバーとの通信に失敗しました (Status: ${response.status})`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        spinner.style.display = 'none';
+        if (data.explanation) {
+            // ★改善: marked.jsを使ってMarkdownをHTMLに変換して表示
+            explanationArea.innerHTML = marked.parse(data.explanation);
+            explanationArea.style.display = 'block';
+            aiBtn.style.display = 'none'; // 成功したらボタンを隠す
+
+            // ▼▼▼ ナビゲーションボタンを複製して表示 ▼▼▼
+            const originalNav = document.getElementById('original-nav-buttons');
+            const newNav = document.getElementById('ai-explanation-navigation');
+            if (originalNav && newNav) {
+                newNav.innerHTML = originalNav.innerHTML;
+            }
+        } else {
+            // 成功レスポンスだが 'explanation' がない、またはエラーメッセージが含まれる場合
+            explanationArea.innerText = data.error || '解説の生成に失敗しました。しばらくしてからもう一度お試しください。';
+            explanationArea.style.display = 'block';
+            aiBtn.disabled = false;
+            aiBtn.innerHTML = `<i class="fas fa-robot me-2"></i>もう一度試す`;
+        }
+    })
+    .catch(error => {
+        console.error('AI解説の取得中にエラーが発生しました:', error);
+        spinner.style.display = 'none';
+        // 改善されたエラーメッセージを表示
+        explanationArea.innerText = error.message || '原因不明のエラーが発生しました。';
+        explanationArea.style.display = 'block';
+        aiBtn.disabled = false;
+        aiBtn.innerHTML = `<i class="fas fa-robot me-2"></i>もう一度試す`;
+    });
+}
+
+function loadNextQuestion() {
+    // 現在のURLパラメータ（難易度など）を維持しつつ、今の問題IDを除外リストに追加してリロード
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('current_id', "{{ q.id }}");
+    window.location.search = urlParams.toString();
+}
+</script>
+
+<style>
+    .bg-success-subtle { background-color: #d1e7dd; }
+    .bg-danger-subtle { background-color: #f8d7da; }
+    .choice-container { transition: all 0.2s; }
+
+    /* ★追加: AI解説エリアのコードブロックのスタイル */
+    #ai-explanation-area pre {
+        background-color: #282c34; /* ダークな背景色 */
+        color: #abb2bf;      /* 明るめの文字色 */
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+        font-size: 0.9em;
+    }
+</style>
+
+<!-- ★追加: AIが生成したMarkdownをHTMLに変換するためのライブラリ -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
