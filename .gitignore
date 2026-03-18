@@ -1,15 +1,20 @@
-# Python cache
+# macOS
+.DS_Store
+
+# 仮想環境
+.venv/
+venv/
+
+# Pythonのキャッシュ
 __pycache__/
 *.pyc
 
-# Environment variables (API Key etc.)
+# データベース（Renderでは毎回再生成するためアップロードしない）
+*.db
+
+# 環境変数（APIキーなど）
 .env
 
-# Database
-*.db
-*.sqlite3
-instance/
-
-# Virtual Environment
-venv/
-.venv/
+# IDEの設定ファイルなど
+.vscode/
+.idea/
