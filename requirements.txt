@@ -9,3 +9,4 @@ gunicorn
 pandas
 python-dotenv
 streamlit
+waitress
