@@ -10,3 +10,4 @@ pandas
 python-dotenv
 streamlit
 waitress
+# For deployment
