@@ -985,7 +985,7 @@ def get_ai_explanation():
 それでは、上記の指示に従って「深掘り解説」を生成してください。
 """
         # ★修正: モデル名を最新のものに更新し、安定性を向上
-        model = google_genai.GenerativeModel("gemini-3-flash")
+        model = google_genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content(prompt)
 
         if not response.parts:
