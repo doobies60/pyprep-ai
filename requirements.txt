@@ -4,7 +4,7 @@ Flask-Login
 Flask-Migrate
 Flask-SQLAlchemy
 Flask-WTF
-google-generativeai
+google-genai
 gunicorn
 pandas
 python-dotenv
