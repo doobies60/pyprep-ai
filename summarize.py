@@ -58,7 +58,7 @@ def generate_content(topic):
     }
 """
     model = genai.GenerativeModel(
-        model_name="gemini-3.1-flash-lite",
+        model_name="gemini-3-flash",
         system_instruction=system_instruction,
         generation_config={"response_mime_type": "application/json"},
     )

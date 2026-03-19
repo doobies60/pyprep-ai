@@ -26,6 +26,7 @@ from flask_login import (
     login_required,
 )
 import google.generativeai as google_genai
+from google.api_core import exceptions
 from dotenv import load_dotenv
 import os, datetime
 import json
@@ -406,7 +407,7 @@ def ai_quiz_by_chapter(chapter_id):
         current_user.api_token_count -= 1
         db.session.add(current_user)
         db.session.commit()
-    except google_genai.errors.ServerError as e:
+    except exceptions.ServerError as e:
         print(f"AI API Server Error: {e}")
         flash(
             "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。",
@@ -984,7 +985,7 @@ def get_ai_explanation():
 それでは、上記の指示に従って「深掘り解説」を生成してください。
 """
         # ★修正: モデル名を最新のものに更新し、安定性を向上
-        model = google_genai.GenerativeModel("gemini-3.1-flash-lite")
+        model = google_genai.GenerativeModel("gemini-3-flash")
         response = model.generate_content(prompt)
 
         if not response.parts:
@@ -996,7 +997,7 @@ def get_ai_explanation():
         db.session.commit()
 
         return jsonify({"explanation": response.text})
-    except google_genai.errors.ServerError as e:
+    except exceptions.ServerError as e:
         print(f"AI API Server Error: {e}")
         return (
             jsonify(
