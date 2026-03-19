@@ -1,3 +1,4 @@
+from google import genai
 from forms import RegistrationForm, LoginForm
 from flask import (
     Flask,
@@ -25,7 +26,7 @@ from flask_login import (
     current_user,
     login_required,
 )
-import google.generativeai as google_genai
+from google import genai
 from google.api_core import exceptions
 from dotenv import load_dotenv
 import os, datetime
@@ -36,7 +37,7 @@ app = Flask(__name__)
 
 # ★追加: 環境変数を読み込み、AIのAPIキーを設定
 load_dotenv()
-google_genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 # ★修正: ハードコードは避け、環境変数からSECRET_KEYを読み込むのが安全です
 app.config["SECRET_KEY"] = os.getenv(
     "SECRET_KEY", "a-secure-default-key-for-development-only"

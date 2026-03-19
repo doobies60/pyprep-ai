@@ -1,10 +1,12 @@
 import os
 import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 load_dotenv()
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# 最新のクライアント作成方法
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def generate_content(topic):
@@ -57,11 +59,24 @@ def generate_content(topic):
     "explanation_d": "【正解：】または【不正解：】から始まる、選択肢Dの個別解説"
     }
 """
+    # ここを 'models/' なしの名前に書き換えます
     model = genai.GenerativeModel(
-        model_name="models/gemini-1.5-flash",
+        model_name="gemini-1.5-flash", 
         system_instruction=system_instruction,
         generation_config={"response_mime_type": "application/json"},
     )
-    response = model.generate_content(f"トピック: {topic}")
-
-    return response.text
+    
+    try:
+        # 最新の生成メソッド（models/ は不要です）
+        response = client.models.generate_content(
+            model="gemini-2.0-flash", 
+            contents=f"トピック: {topic}",
+            config={
+                "system_instruction": system_instruction,
+                "response_mime_type": "application/json"
+            }
+        )
+        return response.text
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return None
