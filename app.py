@@ -409,7 +409,7 @@ def ai_quiz_by_chapter(chapter_id):
         current_user.api_token_count -= 1
         db.session.add(current_user)
         db.session.commit()
-    except ServerError as e:
+    except errors.ServerError as e:
 
         print(f"AI API Server Error: {e}")
         flash(
