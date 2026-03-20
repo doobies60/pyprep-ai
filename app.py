@@ -986,10 +986,15 @@ def get_ai_explanation():
 それでは、上記の指示に従って「深掘り解説」を生成してください。
 """
         # ★修正: モデル名を最新のものに更新し、安定性を向上 (2026年時点の推奨モデルへ)
-        model = google_genai.GenerativeModel('models/gemini-1.5-flash')
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
 
-        if not response.parts:
+        result = response.text
+
+        # google-genai では response.parts は存在しない
+        if not result:
             return jsonify({"error": "AIが回答を生成できませんでした。"}), 500
 
         # ★追加: 成功したらトークンを消費
@@ -997,7 +1002,7 @@ def get_ai_explanation():
         db.session.add(current_user)
         db.session.commit()
 
-        return jsonify({"explanation": response.text})
+        return jsonify({"explanation": result})
     except exceptions.ServerError as e:
         print(f"AI API Server Error: {e}")
         return (
