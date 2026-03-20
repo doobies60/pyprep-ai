@@ -1,4 +1,5 @@
 from google import genai
+from google.genai.types import ServerError
 from forms import RegistrationForm, LoginForm
 from flask import (
     Flask,
@@ -26,8 +27,8 @@ from flask_login import (
     current_user,
     login_required,
 )
-from google import genai
-from google.api_core import exceptions
+
+
 from dotenv import load_dotenv
 import os, datetime
 import json
@@ -408,7 +409,8 @@ def ai_quiz_by_chapter(chapter_id):
         current_user.api_token_count -= 1
         db.session.add(current_user)
         db.session.commit()
-    except exceptions.ServerError as e:
+    except ServerError as e:
+
         print(f"AI API Server Error: {e}")
         flash(
             "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。",
