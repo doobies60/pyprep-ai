@@ -1,5 +1,5 @@
 from google import genai
-from google.genai.types import ServerError
+
 from forms import RegistrationForm, LoginForm
 from flask import (
     Flask,
@@ -27,7 +27,7 @@ from flask_login import (
     current_user,
     login_required,
 )
-
+from google.genai import errors
 
 from dotenv import load_dotenv
 import os, datetime
@@ -1006,7 +1006,7 @@ def get_ai_explanation():
         db.session.commit()
 
         return jsonify({"explanation": result})
-    except exceptions.ServerError as e:
+    except errors.ServerError as e:
         print(f"AI API Server Error: {e}")
         return (
             jsonify(
