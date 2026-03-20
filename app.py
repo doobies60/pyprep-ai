@@ -699,6 +699,7 @@ def exercise(chapter_id):
 
     question = query.order_by(db.func.random()).first()
 
+
     if not question:
         return redirect(url_for("main.index"))
 
