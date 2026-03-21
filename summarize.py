@@ -1,6 +1,7 @@
 import os
 from google import genai
 from dotenv import load_dotenv
+from google.genai import errors
 
 load_dotenv()
 
@@ -61,15 +62,19 @@ def generate_content(topic):
     try:
         # google-genai の正しい生成メソッド
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-1.5-flash",
             contents=f"トピック: {topic}",
             config={
                 "system_instruction": system_instruction,
-                "response_mime_type": "application/json"
-            }
+                "response_mime_type": "application/json",
+            },
         )
 
         return response.text
+
+    except errors.ServerError as e:
+        print(f"Gemini Server Error: {e}")
+        return None
 
     except Exception as e:
         print(f"Gemini API Error: {e}")

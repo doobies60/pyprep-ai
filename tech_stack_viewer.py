@@ -59,7 +59,7 @@ with col1:
     st.subheader("AI・機械学習 (AI Integration)")
     st.markdown(
         """
-    *   **モデル:** Google Gemini (`gemini-3-flash`)
+    *   **モデル:** Google Gemini (`gemini-1.5-flash`)
     *   **ライブラリ:** `google-generativeai`
     *   **機能:** AIクイズ生成、深掘り解説。
     """
