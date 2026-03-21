@@ -62,7 +62,7 @@ def generate_content(topic):
     try:
         # google-genai の正しい生成メソッド
         response = client.models.generate_content(
-            model="gemini-1.5-flash-001",
+            model="gemini-2.5-flash",
             contents=f"トピック: {topic}",
             config={
                 "system_instruction": system_instruction,
