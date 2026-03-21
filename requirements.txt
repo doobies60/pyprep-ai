@@ -10,4 +10,5 @@ pandas
 python-dotenv
 streamlit
 waitress
+psycopg2-binary
 # For deployment

@@ -17,7 +17,8 @@ from utils import get_chapters_data, create_ai_prompt  # ★追加: 共通関数
 from flask_migrate import Migrate  # ★★★ 追加: データベースマイグレーションツール
 
 # --- Blueprints ---
-from auth import auth_bp
+# ★修正: ルートのauth.pyではなく、blueprintsフォルダ内のauthを使用する
+from blueprints.auth import auth_bp
 from blueprints.admin import admin_bp
 from blueprints.main import main_bp
 from flask_login import (
@@ -77,15 +78,28 @@ def before_request_handler():
 
 # --- データベース設定（ここが心臓部） ---
 base_dir = os.path.abspath(os.path.dirname(__file__))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
-    base_dir, "python_exam_v2.db"
-)
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# 2. ユーザーDB（追加分）
-app.config["SQLALCHEMY_BINDS"] = {
-    "users_db": "sqlite:///" + os.path.join(base_dir, "users.db")
-}
+# ★修正: Render(PostgreSQL)とローカル(SQLite)を自動切り替え
+database_url = os.getenv("DATABASE_URL", "").strip()
+
+if database_url:
+    # Render環境 (PostgreSQL)
+    # SQLAlchemyは 'postgres://' ではなく 'postgresql://' を必要とするため補正
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_BINDS"] = {
+        "users_db": database_url  # ユーザー情報も同じPostgreSQLに保存
+    }
+else:
+    # ローカル環境 (SQLite)
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(base_dir, "python_exam_v2.db")
+    app.config["SQLALCHEMY_BINDS"] = {
+        "users_db": "sqlite:///" + os.path.join(base_dir, "users.db")
+    }
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 
 @login_manager.user_loader
@@ -1029,5 +1043,7 @@ def get_ai_explanation():
 
 
 if __name__ == "__main__":
-    # use_reloader=False を追加して、自動再起動をオフにする
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
+    # RenderはGunicornを使うため、このブロックはローカル開発でのみ使用されます。
+    # host='0.0.0.0' にすることで、コンテナ外や同一ネットワークの他のPCからもアクセス可能になります。
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)

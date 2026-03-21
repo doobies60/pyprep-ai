@@ -66,12 +66,12 @@ def run_migrations_offline():
     """
     # For offline mode to work correctly, the app context is needed to get the URL.
     # This mode is likely not used on Render, but we can get the URL from the app if needed.
-    # url = config.get_main_option("sqlalchemy.url")
-    url = get_engine_url()
-    context.configure(url=url, target_metadata=get_metadata(), literal_binds=True)
+    with current_app.app_context():
+        url = get_engine_url()
+        context.configure(url=url, target_metadata=get_metadata(), literal_binds=True)
 
-    with context.begin_transaction():
-        context.run_migrations()
+        with context.begin_transaction():
+            context.run_migrations()
 
 
 def run_migrations_online():
