@@ -990,7 +990,7 @@ def get_ai_explanation():
 """
         # ★修正: モデル名を最新のものに更新し、安定性を向上 (2026年時点の推奨モデルへ)
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-1.5-flash-001",
             contents=prompt
         )
 

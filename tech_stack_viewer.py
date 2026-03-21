@@ -27,8 +27,6 @@ with col1:
     st.markdown(
         """
     *   **言語:** Python 3.12+
-    *   **フレームワーク:** Flask
-        *   **Blueprint:** 機能ごと（`auth`, `main`, `admin`）に分割。
     *   **Webフレームワーク:** Flask
         *   **Blueprint:** アプリケーションを機能単位（`auth`, `main`, `admin`）で分割・管理。
         *   **Flask-SQLAlchemy:** データベース操作 (ORM)。
@@ -59,7 +57,7 @@ with col1:
     st.subheader("AI・機械学習 (AI Integration)")
     st.markdown(
         """
-    *   **モデル:** Google Gemini (`gemini-1.5-flash`)
+    *   **モデル:** Google Gemini (`gemini-1.5-flash-001`)
     *   **ライブラリ:** `google-generativeai`
     *   **機能:** AIクイズ生成、深掘り解説。
     """
@@ -83,11 +81,9 @@ st.markdown(
 *   **Streamlit:**
     *   **画面遷移図 (`diagram.py`):** 画面フローの可視化。
     *   **モックアップ (`mockup.py`):** UIイメージ共有。
-    *   **DB検証ツール (`check_db.py`):** DBの中身をGUIで確認 (**pandas** を使用した集計・可視化)。
-    *   **DB検証ツール (`check_db.py`):** DBデータの閲覧・管理ダッシュボード。
+    *   **DB検証ツール (`check_db.py`):** DBデータの閲覧・管理ダッシュボード (**pandas** を使用した集計・可視化)。
     *   **技術スタック表示 (このファイル):** プロジェクト構成のドキュメント。
 *   **データ処理・分析:**
-    *   **pandas:** 管理ツール（`check_db.py`）におけるデータの構造化、統計、グラフ描画用データの作成に使用。
     *   **pandas:** `check_db.py` における学習ログの集計、統計分析、グラフ描画用データの生成に使用。
 *   **管理ツール:**
     *   `pip` / `requirements.txt`: パッケージ管理。
