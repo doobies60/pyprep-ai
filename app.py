@@ -17,7 +17,6 @@ from utils import get_chapters_data, create_ai_prompt  # ★追加: 共通関数
 from flask_migrate import Migrate  # ★★★ 追加: データベースマイグレーションツール
 
 # --- Blueprints ---
-# ★修正: ルートのauth.pyではなく、blueprintsフォルダ内のauthを使用する
 from blueprints.auth import auth_bp
 from blueprints.admin import admin_bp
 from blueprints.main import main_bp
@@ -1047,3 +1046,6 @@ if __name__ == "__main__":
     # host='0.0.0.0' にすることで、コンテナ外や同一ネットワークの他のPCからもアクセス可能になります。
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
+
+with app.app_context():
+    db.create_all()

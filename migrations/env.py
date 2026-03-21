@@ -35,10 +35,6 @@ def get_engine_url():
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-# The following lines are moved into `run_migrations_online` to ensure they run within the app context.
-# config.set_main_option('sqlalchemy.url', get_engine_url())
-# target_db = current_app.extensions['migrate'].db
-
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -92,9 +88,6 @@ def run_migrations_online():
                     directives[:] = []
                     logger.info("No changes in schema detected.")
 
-        # This was at the top level, but needs to be here to access the app context
-        config.set_main_option("sqlalchemy.url", get_engine_url())
-
         conf_args = current_app.extensions["migrate"].configure_args
         if conf_args.get("process_revision_directives") is None:
             conf_args["process_revision_directives"] = process_revision_directives
@@ -102,6 +95,9 @@ def run_migrations_online():
         connectable = get_engine()
 
         with connectable.connect() as connection:
+            # set_main_option needs to be here or before context.configure
+            config.set_main_option("sqlalchemy.url", get_engine_url())
+            
             context.configure(
                 connection=connection, target_metadata=get_metadata(), **conf_args
             )
