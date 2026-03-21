@@ -116,6 +116,22 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(admin_bp)
 
+with app.app_context():
+    db.create_all()
+
+    # questions が空なら JSON から投入
+    if Question.query.count() == 0:
+        import json, os
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        json_path = os.path.join(base_dir, "questions.json")
+
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for q in data:
+            db.session.add(Question(**q))
+        db.session.commit()
+        print("✔ questions データを PostgreSQL に投入しました")
 
 # ★修正: テンプレート等が url_for('index') を呼んだ場合の互換性対応
 @app.route("/legacy_index_redirect", endpoint="index")
@@ -1047,5 +1063,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
 
-with app.app_context():
-    db.create_all()
