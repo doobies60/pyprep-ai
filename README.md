@@ -1,16 +1,20 @@
 # Python3 基礎演習アカデミー  
+Python学習者向けの「演習・AI解説・学習ログ管理」アプリです。  
+Flask / PostgreSQL / Render / Gemini API を使用し、実務に近い構成で開発しました。
+
+## ■ スクリーンショット
 <img width="675" height="864" alt="image" src="https://github.com/user-attachments/assets/adb07334-f39a-4f70-9ee7-a92ffc1231fa" />
 <img width="1004" height="886" alt="image" src="https://github.com/user-attachments/assets/c3050444-71f8-4d78-ba4b-ff64c1fb3990" />
 <img width="986" height="905" alt="image" src="https://github.com/user-attachments/assets/5c57af72-3a78-40ea-a96c-491a136d795d" />
 
-Python学習者向けの「演習・AI解説・学習ログ管理」アプリです。  
-Flask / PostgreSQL / Render / Gemini API を使用し、実務に近い構成で開発しました。
-
 ---
 
 ## ■ アプリ概要
-Python3 エンジニア認定基礎試験の学習をサポートするための Web アプリです。  
+Python3 エンジニア認定基礎試験の学習をサポートする Web アプリです。  
 120問の演習問題、AIによる解説生成、学習ログの記録など、学習効率を高める機能を備えています。
+
+また、**管理者向けの分析ツールを Streamlit で別途開発**し、  
+学習データの可視化やユーザーの進捗分析も可能です。
 
 ---
 
@@ -25,12 +29,19 @@ Python3 エンジニア認定基礎試験の学習をサポートするための
 ### ● AI 機能
 - Gemini API による解説生成
 - 問題文の要約・補足説明
-- ユーザーごとの AI 利用回数管理
+- ユーザーごとの AI 利用回数管理（1日100トークン制限）
 
 ### ● ユーザー管理
 - 新規登録 / ログイン（Flask-Login）
-- 学習ログの記録（正答率・進捗）
-- 章ごとの達成状況を可視化
+- パスワードは **Werkzeug によるハッシュ化**で安全に保存
+- Flask-WTF によるフォームバリデーション
+- CSRF 対策（Flask-WTF の CSRFProtect）
+
+### ● 管理者向け分析ツール（Streamlit）
+- 学習ログの可視化
+- ユーザーごとの進捗分析
+- 正答率・苦手分野の把握
+- 本体アプリとは独立した管理ツールとして運用
 
 ### ● デプロイ / 運用
 - Render による本番デプロイ
@@ -46,6 +57,8 @@ Python3 エンジニア認定基礎試験の学習をサポートするための
 - Flask
 - SQLAlchemy / Flask-Migrate
 - PostgreSQL（Render）
+- Werkzeug（パスワードハッシュ化）
+- Flask-WTF（フォームバリデーション / CSRF）
 
 ### Frontend
 - HTML / CSS / Bootstrap
@@ -57,6 +70,9 @@ Python3 エンジニア認定基礎試験の学習をサポートするための
 ### DevOps
 - Render（Webサービス / DB）
 - GitHub（バージョン管理）
+
+### 管理ツール
+- Streamlit（学習ログ分析）
 
 ---
 
@@ -83,7 +99,13 @@ PostgreSQL / SQLite を自動切り替え。
 `auth / main / admin` に分割し、  
 機能ごとに責務を明確化。
 
-### ● 5. UI/UX の改善  
+### ● 5. セキュリティ対策  
+- パスワードは **Werkzeug の generate_password_hash** で保存  
+- Flask-WTF による **CSRF トークン**  
+- バリデーションによる不正入力防止  
+- API の悪用防止として **1ユーザー1日100トークン制限**
+
+### ● 6. UI/UX の改善  
 - 進捗バー  
 - 完了バッジ  
 - 難易度選択ドロップダウン  
@@ -91,6 +113,11 @@ PostgreSQL / SQLite を自動切り替え。
 - レイアウト調整  
 
 学習アプリとしての使いやすさを重視。
+
+### ● 7. 管理者向け分析ツール（Streamlit）
+- 学習ログをグラフ化  
+- ユーザーごとの弱点分析  
+- 本体アプリと分離し、安全な運用を実現
 
 ---
 
@@ -110,6 +137,18 @@ PostgreSQL / SQLite を自動切り替え。
 ### ● UI の崩れ  
 → Bootstrap と独自 CSS を調整し改善
 
+### ● API の悪用対策  
+→ 1ユーザー1日100トークン制限を実装  
+→ before_request で軽量にチェック
+
+---
+
+## ■ 注意事項
+本アプリに収録されている問題・解説は現在も精査中です。  
+Python3 エンジニア認定基礎試験の公式問題とは異なり、  
+本試験の完全な再現を保証するものではありません。  
+学習補助ツールとしてご利用ください。
+
 ---
 
 ## ■ デモURL
@@ -122,7 +161,7 @@ https://pyprep-ai-2-0.onrender.com/
 - ユーザーごとの弱点分析
 - AI による自動問題生成
 - スマホUIの最適化
-
+- 管理ツールの機能拡張
 
 👤 著者
 
