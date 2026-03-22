@@ -26,10 +26,7 @@
                 <span class="badge rounded-pill bg-secondary float-end p-2 px-3">{{ q.difficulty }}</span>
             </div>
             <div class="card-body">
-                <h5 class="card-title mb-4" style="line-height: 1.7; white-space: pre-wrap;">
-                    <span class="d-block text-muted fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>
-                    {{ q.question }}
-                </h5>
+                <h5 class="card-title mb-4" style="line-height: 1.7; white-space: pre-wrap;"><span class="d-block text-muted fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>{{ q.question }}</h5>
                 
                 <div class="list-group">
                     {% for option in q.options %}

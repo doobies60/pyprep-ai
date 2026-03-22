@@ -37,18 +37,13 @@
         <div class="card-body p-4">
             
             <div class="mb-5">
-                <h4 class="fw-bold" style="line-height: 1.6; white-space: pre-wrap;">
-                    <span class="d-block text-primary fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>
-                    {{ q.question }}
-                </h4>
+                <h4 class="fw-bold" style="line-height: 1.6; white-space: pre-wrap;"><span class="d-block text-primary fw-normal fs-6 mb-2">【出題範囲: 第{{ q.chapter }}章】</span>{{ q.question }}</h4>
             </div>
 
             <div class="list-group gap-3 mb-4">
                 {% for label in ['a', 'b', 'c', 'd'] %}
                 <div class="border rounded p-3 choice-container" id="container-{{ label }}">
-                    <button type="button" class="btn btn-outline-primary fw-bold px-4 py-2 w-100 text-start action-btn" onclick="submitAnswer('{{ label }}')">
-                        {{ label | upper }}. {{ q.options[loop.index0] }}
-                    </button>
+                    <button type="button" class="btn btn-outline-primary fw-bold px-4 py-2 w-100 text-start action-btn" onclick="submitAnswer('{{ label }}')">{{ label | upper }}. {{ q.options[loop.index0] }}</button>
                     
                     {# 個別解説がある場合（DB問題など）のみ表示 #}
                     {% if q.individual_explanations and q.individual_explanations[loop.index0] %}
@@ -72,20 +67,14 @@
                 </div>
                 
                 <div id="original-nav-buttons" class="d-flex justify-content-center gap-3 mt-4">
-                    <button onclick="loadNextQuestion()" class="btn btn-lg btn-success px-5 shadow fw-bold">
-                        次の問題へ
-                    </button>
-                    <a href="{{ url_for('main.index') }}" class="btn btn-lg btn-outline-secondary px-5 shadow fw-bold">
-                        TOPに戻る
-                    </a>
+                    <button onclick="loadNextQuestion()" class="btn btn-lg btn-success px-5 shadow fw-bold">次の問題へ</button>
+                    <a href="{{ url_for('main.index') }}" class="btn btn-lg btn-outline-secondary px-5 shadow fw-bold">TOPに戻る</a>
                 </div>
 
                 <!-- AI解説ボタンと表示エリア -->
                 <div class="mt-4 pt-4 border-top">
                     <div class="text-center">
-                        <button id="ai-explanation-btn" class="btn btn-outline-primary" onclick="getAiExplanation()">
-                            <i class="fas fa-robot me-2"></i>AIによる深掘り解説を見る
-                        </button>
+                        <button id="ai-explanation-btn" class="btn btn-outline-primary" onclick="getAiExplanation()"><i class="fas fa-robot me-2"></i>AIによる深掘り解説を見る</button>
                         <div id="ai-explanation-spinner" class="spinner-border text-primary mt-3" role="status" style="display: none;">
                             <span class="visually-hidden">Loading...</span>
                         </div>
@@ -217,6 +206,12 @@ function getAiExplanation() {
 }
 
 function loadNextQuestion() {
+    // 画面遷移が発生するため、手動でローディング画面を表示する
+    const overlay = document.getElementById('ai-loading-overlay');
+    if (overlay) {
+        overlay.classList.add('active');
+    }
+
     // 現在のURLパラメータ（難易度など）を維持しつつ、今の問題IDを除外リストに追加してリロード
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.set('current_id', "{{ q.id }}");

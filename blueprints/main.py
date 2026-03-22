@@ -10,11 +10,18 @@ main_bp = Blueprint("main", __name__)
 def index():
     chapters = get_chapters_data()
     progress_data = {}  # 先に初期化
+    total_accuracy = 0  # 全体正解率の初期値
 
     # --- ★進捗状況の計算ロジックを追加 ---
     if current_user.is_authenticated:
         # 1. ログインユーザーの学習ログを全て取得
         logs = StudyLog.query.filter_by(user_id=current_user.id).all()
+
+        # ★追加: 全体の正解率を計算 (未回答を除外して計算)
+        answered_logs = [l for l in logs if l.user_answer is not None]
+        if answered_logs:
+            correct_total = sum(1 for l in answered_logs if l.is_correct)
+            total_accuracy = (correct_total / len(answered_logs)) * 100
 
         # 2. 章ごとの正解数・問題数を集計する辞書
         for log in logs:
@@ -62,7 +69,12 @@ def index():
             ]
 
     username = session.get("username")
-    return render_template("index.html", chapters=chapters, username=username)
+    return render_template(
+        "index.html",
+        chapters=chapters,
+        username=username,
+        total_accuracy=total_accuracy,
+    )
 
 
 @main_bp.route("/profile")

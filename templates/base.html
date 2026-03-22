@@ -30,6 +30,23 @@
         }
         .admin-fab:hover { background-color: #5a6268; color: #fff; transform: scale(1.05); }
         footer { margin-top: 50px; padding: 20px; background: #eee; text-align: center; }
+
+        /* --- AI生成中ローディングオーバーレイ用CSS --- */
+        #ai-loading-overlay {
+            display: none; /* 初期状態は非表示 */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); /* 少し濃い白背景 */
+            z-index: 10000; /* 最前面に表示 */
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        #ai-loading-overlay.active {
+            display: flex !important; /* JSでクラスを付与して表示 */
+        }
+        /* 選択肢ボタンなどの改行を有効化し、問題文の余白を除去 */
+        .container .action-btn {
+            white-space: pre-wrap; /* \nを改行として表示 */
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
@@ -85,5 +102,63 @@
         <i class="fas fa-user-shield"></i>
     </a>
     {% endif %}
+
+    <!-- ========================================== -->
+    <!-- AI生成中ローディングオーバーレイ (ここから追加) -->
+    <!-- ========================================== -->
+    <div id="ai-loading-overlay">
+        <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h3 class="mt-4 text-dark fw-bold">AIが問題を生成しています...</h3>
+        <p class="text-muted mt-2 text-center">これには10秒〜20秒程度かかる場合があります。<br>画面を閉じずにお待ちください。</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('ai-loading-overlay');
+
+            // 1. リンククリック時の監視 (より強力な判定ロジック)
+            document.addEventListener('click', function(e) {
+                const link = e.target.closest('a');
+                
+                // リンクでない、hrefがない、別タブで開く(target="_blank")、無効リンク(#)の場合は無視
+                if (!link || !link.href || link.target === '_blank' || link.getAttribute('href') === '#') return;
+                
+                // ★ポイント: getAttribute('href')ではなく link.href を使うことで絶対パス(http://...)を取得
+                const url = link.href;
+
+                // 対象となるURLキーワード（これらが含まれるURLへの遷移時はグルグルを出す）
+                const targetKeywords = ['ai_', 'hybrid_', 'mock_', '/exercise/', '/level_exercise/', '/ai_quiz', 'result'];
+
+                if (targetKeywords.some(keyword => url.includes(keyword))) {
+                    // Ctrl/Commandクリック（バックグラウンドタブで開く）以外なら表示
+                    if (!e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                        overlay.classList.add('active');
+                    }
+                }
+            });
+
+            // 2. フォーム送信時もローディングを表示 (Event Delegation)
+            document.addEventListener('submit', function(e) {
+                // AJAX処理などで preventDefault() されている場合は表示しない
+                if (e.defaultPrevented) return;
+
+                // フォーム送信は基本的に重い処理（AI解説作成やテスト送信）が多いので表示する
+                // ただし、もし検索バーなど軽いフォームがあるなら条件分岐を追加してください
+                if (e.target.tagName === 'FORM' && !e.target.target) {
+                     overlay.classList.add('active');
+                }
+            });
+
+            // 3. ブラウザの「戻る」ボタンで戻ってきた時にローディングを消す対策
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    overlay.classList.remove('active');
+                }
+            });
+        });
+    </script>
 </body>
+
 </html>

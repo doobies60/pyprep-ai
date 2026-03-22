@@ -199,8 +199,8 @@ def normalize_question(q_obj):
 
     return {
         "id": q_obj.id,
-        "question": q_obj.question,
-        "options": [q_obj.choice_a, q_obj.choice_b, q_obj.choice_c, q_obj.choice_d],
+        "question": q_obj.question.strip() if q_obj.question else "",
+        "options": [o.strip() if o else "" for o in [q_obj.choice_a, q_obj.choice_b, q_obj.choice_c, q_obj.choice_d]],
         "answer": q_obj.answer.lower(),
         "explanation": q_obj.common_explanation,
         "is_ai": False,
@@ -298,6 +298,9 @@ def ai_quiz():
     cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
     try:
         quiz_data = json.loads(cleaned_text)
+        # データクレンジング: 先頭末尾の空白削除
+        quiz_data["question"] = quiz_data.get("question", "").strip()
+        quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
         # 4. AI専用の画面（または共通の演習画面）を表示
         quiz_data["chapter_name"] = f"Chapter {chapter_num} (AI)"
         quiz_data["chapter"] = chapter_num  # テンプレートで章番号を使えるように追加
@@ -457,6 +460,9 @@ def ai_quiz_by_chapter(chapter_id):
     cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
     try:
         quiz_data = json.loads(cleaned_text)
+        # データクレンジング
+        quiz_data["question"] = quiz_data.get("question", "").strip()
+        quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
         quiz_data["id"] = (
             f"ai_{chapter_id}_{random.randint(1000, 9999)}"  # 新しいAI IDを割り当てる
         )
@@ -508,6 +514,9 @@ def result():
         try:
             # 文字列を辞書データに変換
             quiz_data = json.loads(cleaned_text)
+            # データクレンジング
+            quiz_data["question"] = quiz_data.get("question", "").strip()
+            quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
             # 成功したら結果画面を表示
             return render_template("result.html", q=quiz_data)
         except Exception as e:
@@ -595,6 +604,9 @@ def hybrid_quiz():
             db.session.commit()
 
             quiz_data = json.loads(cleaned_text)
+            # データクレンジング
+            quiz_data["question"] = quiz_data.get("question", "").strip()
+            quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
             display_data = {
                 "id": f"ai_{random.randint(1000, 9999)}",
                 "question": quiz_data["question"],
@@ -678,6 +690,9 @@ def exercise(chapter_id):
                     db.session.commit()
 
                     quiz_data = json.loads(cleaned_text)
+                    # データクレンジング
+                    quiz_data["question"] = quiz_data.get("question", "").strip()
+                    quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
 
                     # AI問題用のデータ形式を整える
                     display_data = {
@@ -785,6 +800,9 @@ def level_exercise(level):
                     db.session.commit()
 
                     quiz_data = json.loads(cleaned_text)
+                    # データクレンジング
+                    quiz_data["question"] = quiz_data.get("question", "").strip()
+                    quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
 
                     display_data = {
                         "id": f"ai_{random.randint(1000, 9999)}",
@@ -1062,4 +1080,3 @@ if __name__ == "__main__":
     # host='0.0.0.0' にすることで、コンテナ外や同一ネットワークの他のPCからもアクセス可能になります。
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
-
