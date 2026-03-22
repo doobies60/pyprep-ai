@@ -1,65 +1,129 @@
-Python3 基礎演習アカデミー 🐍
+# Python3 基礎演習アカデミー  
+<img width="675" height="864" alt="image" src="https://github.com/user-attachments/assets/adb07334-f39a-4f70-9ee7-a92ffc1231fa" />
+<img width="1004" height="886" alt="image" src="https://github.com/user-attachments/assets/c3050444-71f8-4d78-ba4b-ff64c1fb3990" />
+<img width="986" height="905" alt="image" src="https://github.com/user-attachments/assets/5c57af72-3a78-40ea-a96c-491a136d795d" />
 
-Python 3 エンジニア認定基礎試験の合格を強力にサポートする、AI（Gemini）搭載の演習アプリケーションです。
+Python学習者向けの「演習・AI解説・学習ログ管理」アプリです。  
+Flask / PostgreSQL / Render / Gemini API を使用し、実務に近い構成で開発しました。
 
-🌟 概要
+---
 
-本プロジェクトは、開発者自らが試験に合格するために「ドッグフーディング（自社製品を自ら使うこと）」手法を取り入れて開発されました。
-公式シラバスに基づいた問題データベースと、Google Gemini APIによる動的な解説・問題生成を組み合わせたハイブリッド学習システムです。
+## ■ アプリ概要
+Python3 エンジニア認定基礎試験の学習をサポートするための Web アプリです。  
+120問の演習問題、AIによる解説生成、学習ログの記録など、学習効率を高める機能を備えています。
 
-🚀 主な機能
+---
 
-セキュアな認証システム: Flask-Loginとハッシュ化（SHA-256）を用いたユーザー管理。
+## ■ 主な機能
 
-公式シラバス準拠: 出題割合をシラバスに合わせ、本番に近い演習環境を提供。
+### ● 学習機能
+- 章別演習（120問）
+- レベル別ランダム演習（初級 / 中級 / 上級）
+- 全範囲ランダム演習
+- 最終模擬テスト（40問）
 
-AIによる深掘り解説: Gemini APIが、正解・不正解の理由をPythonの基本理念（Zen of Python）に基づいて丁寧に解説。
+### ● AI 機能
+- Gemini API による解説生成
+- 問題文の要約・補足説明
+- ユーザーごとの AI 利用回数管理
 
-学習履歴の可視化: 苦手な章や進捗度をダッシュボードで確認可能。
+### ● ユーザー管理
+- 新規登録 / ログイン（Flask-Login）
+- 学習ログの記録（正答率・進捗）
+- 章ごとの達成状況を可視化
 
-🛠 技術スタック
+### ● デプロイ / 運用
+- Render による本番デプロイ
+- PostgreSQL を使用した本番DB運用
+- ローカルと本番で DB を自動切り替え
 
-Backend: Python 3.12 / Flask
+---
 
-Database: SQLite / SQLAlchemy (ORM)
+## ■ 技術スタック
 
-AI Integration: Google Gemini 3.1 flash-lite
+### Backend
+- Python 3
+- Flask
+- SQLAlchemy / Flask-Migrate
+- PostgreSQL（Render）
 
-Frontend: Jinja2 / CSS3 (Responsive Design)
+### Frontend
+- HTML / CSS / Bootstrap
+- Jinja2 Template
 
-Support Tools: Streamlit (DB管理・可視化用)
+### AI
+- Gemini API（genai）
 
-📦 セットアップ（開発環境）
+### DevOps
+- Render（Webサービス / DB）
+- GitHub（バージョン管理）
 
-リポジトリをクローン
+---
 
-git clone [https://github.com/doobie60/pyprep-ai.git](https://github.com/doobie60/pyprep-ai.git)
-cd pyprep-ai
+## ■ 工夫した点（実務を意識した設計）
 
+### ● 1. Render 環境での DB 初期化問題を解決  
+Render では `if __name__ == "__main__":` が実行されないため、  
+DB 初期化コードが動かず、問題データが投入されない課題が発生。  
+ログ解析により原因を特定し、  
+**Blueprint登録後に app_context を使って自動投入する仕組み**を実装。
 
-仮想環境の作成とライブラリのインストール
+### ● 2. AI API のモデル非推奨化に対応  
+Gemini API の旧モデルが非推奨化されたため、  
+エラー内容を解析し、  
+**最新モデル（gemini-2.5-flash）へ移行**。  
+例外処理も追加し安定性を向上。
 
-python -m venv .venv
-source .venv/bin/activate  # Windowsの場合: .venv\Scripts\activate
-pip install -r requirements.txt
+### ● 3. 本番とローカルで DB を自動切り替え  
+環境変数 `DATABASE_URL` の有無で  
+PostgreSQL / SQLite を自動切り替え。  
+実務でよくある構成を再現。
 
+### ● 4. Blueprint 構成で可読性を向上  
+`auth / main / admin` に分割し、  
+機能ごとに責務を明確化。
 
-環境変数の設定
-.env ファイルを作成し、以下の項目を設定してください。
+### ● 5. UI/UX の改善  
+- 進捗バー  
+- 完了バッジ  
+- 難易度選択ドロップダウン  
+- ローディング表示  
+- レイアウト調整  
 
-GEMINI_API_KEY=あなたのAPIキー
-SECRET_KEY=任意の文字列
+学習アプリとしての使いやすさを重視。
 
+---
 
-アプリの起動
+## ■ 苦労した点と解決方法（企業が最も評価する部分）
 
-python app.py
+### ● デプロイ後に問題が表示されない  
+→ ログを読み、DB 初期化コードが実行されていないことを特定  
+→ app_context の位置を修正し自動投入を実装
 
+### ● AI API のエラー  
+→ モデル非推奨化が原因  
+→ 新モデルへ移行し、例外処理を追加
 
-📝 開発のこだわり
+### ● Blueprint の循環 import  
+→ 構造を見直し、依存関係を整理
 
-「Simple is better than complex.」というPythonの哲学に基づき、学習者がノイズを感じることなく、最短ルートで理解を深められるUI/UXを追求しました。
+### ● UI の崩れ  
+→ Bootstrap と独自 CSS を調整し改善
+
+---
+
+## ■ デモURL
+https://pyprep-ai-2-0.onrender.com/
+
+---
+
+## ■ 今後の改善予定
+- 問題の追加
+- ユーザーごとの弱点分析
+- AI による自動問題生成
+- スマホUIの最適化
+
 
 👤 著者
 
-鈴木 (@doobie60)
+鈴木 進
