@@ -7,6 +7,8 @@ Flask / PostgreSQL / Render / Gemini API を使用し、実務に近い構成で
 <img width="1004" height="886" alt="image" src="https://github.com/user-attachments/assets/c3050444-71f8-4d78-ba4b-ff64c1fb3990" />
 <img width="986" height="905" alt="image" src="https://github.com/user-attachments/assets/5c57af72-3a78-40ea-a96c-491a136d795d" />
 
+## デモURL  
+https://pyprep-ai-2-0.onrender.com/
 ---
 
 ## ■ アプリ概要
