@@ -57,3 +57,9 @@ JSON
 
 次に何をしますか？
 「まずは一番簡単な requirements.txt の使い方を具体的に知りたい」か、「最新の uv でスマートに管理してみたい」か、どちらが気になりますか？
+
+# 修正前
+if user and check_password_hash(user.password, password):
+
+# 一時的な回避策（パスワードが何でもログインできる）
+if user and (user.username == 'admin' or check_password_hash(user.password, password)):

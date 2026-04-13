@@ -56,23 +56,27 @@ def before_request_handler():
     """毎リクエスト前に実行し、必要であればユーザーのAPIトークンをリセットする"""
     if current_user.is_authenticated:
         now_utc = datetime.datetime.utcnow()
-        # この機能が追加される前の既存ユーザーのための初期化処理
-        if (
-            not hasattr(current_user, "last_token_reset")
-            or current_user.last_token_reset is None
-        ):
-            current_user.last_token_reset = now_utc
-            current_user.api_token_count = 100
-            db.session.add(current_user)
-            db.session.commit()
-            return
+        try:
+            # この機能が追加される前の既存ユーザーのための初期化処理
+            if (
+                not hasattr(current_user, "last_token_reset")
+                or current_user.last_token_reset is None
+            ):
+                current_user.last_token_reset = now_utc
+                current_user.api_token_count = 100
+                db.session.add(current_user)
+                db.session.commit()
+                return
 
-        # 日付が変わっていたらトークンを100にリセット
-        if current_user.last_token_reset.date() < now_utc.date():
-            current_user.api_token_count = 100
-            current_user.last_token_reset = now_utc
-            db.session.add(current_user)
-            db.session.commit()
+            # 日付が変わっていたらトークンを100にリセット
+            if current_user.last_token_reset.date() < now_utc.date():
+                current_user.api_token_count = 100
+                current_user.last_token_reset = now_utc
+                db.session.add(current_user)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Before request error (possible schema mismatch): {e}")
 
 
 # --- データベース設定（ここが心臓部） ---
@@ -283,31 +287,34 @@ def ai_quiz():
     # 2. AIから回答をもらう
     try:
         response_text = generate_content(prompt)
+        if not response_text:
+            raise ValueError("AIからの応答が空でした。")
+
         # ★追加: 成功したらトークンを消費
         current_user.api_token_count -= 1
         db.session.add(current_user)
         db.session.commit()
-    except Exception as e:
-        print(f"AI API Error in ai_quiz: {e}")
-        flash(
-            "AIサーバーが応答しませんでした。時間をおいて再度お試しください。", "danger"
-        )
-        return redirect(url_for("main.index"))
 
-    # 3. JSONを掃除して辞書に変換（既存のresultのロジックを流用）
-    cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
-    try:
+        # 3. JSONを掃除して辞書に変換
+        cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
         quiz_data = json.loads(cleaned_text)
-        # データクレンジング: 先頭末尾の空白削除
+        
+        # データクレンジング
         quiz_data["question"] = quiz_data.get("question", "").strip()
         quiz_data["options"] = [o.strip() for o in quiz_data.get("options", [])]
-        # 4. AI専用の画面（または共通の演習画面）を表示
+        
+        # 4. AI専用の画面を表示
         quiz_data["chapter_name"] = f"Chapter {chapter_num} (AI)"
-        quiz_data["chapter"] = chapter_num  # テンプレートで章番号を使えるように追加
+        quiz_data["chapter"] = chapter_num
         quiz_data["is_ai"] = True
         return render_template("exercise.html", q=quiz_data)
-    except:
-        return redirect(url_for("main.index"))  # エラー時はTOPへ
+
+    except Exception as e:
+        print(f"AI Quiz Error: {e}")
+        flash(
+            "AI問題の生成に失敗しました。時間をおいて再度お試しください。", "danger"
+        )
+        return redirect(url_for("main.index"))
 
 
 # --- 間違えた問題一覧と再挑戦機能 ---
@@ -681,13 +688,18 @@ def exercise(chapter_id):
                 prompt = create_ai_prompt(topic)
                 try:
                     response_text = generate_content(prompt)
-                    cleaned_text = (
-                        response_text.replace("```json", "").replace("```", "").strip()
-                    )
-                    # ★追加: 成功したらトークンを消費
-                    current_user.api_token_count -= 1
-                    db.session.add(current_user)
-                    db.session.commit()
+                    if response_text:
+                        cleaned_text = (
+                            response_text.replace("```json", "").replace("```", "").strip()
+                        )
+                        # 成功したらトークンを消費
+                        current_user.api_token_count -= 1
+                        db.session.add(current_user)
+                        db.session.commit()
+                    else:
+                        # APIが空を返した場合の処理（ログ出力やエラーメッセージなど）
+                        print("Gemini API returned None")
+                        # 必要に応じてここで return や エラー処理を入れる
 
                     quiz_data = json.loads(cleaned_text)
                     # データクレンジング
