@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from models import db, User
-from forms import LoginForm, RegistrationForm
+from forms import LoginForm, RegistrationForm,ChangePasswordForm
 
 # Blueprintの定義
 auth_bp = Blueprint("auth", __name__)
@@ -65,3 +65,14 @@ def register():
         print(f"新規ユーザー登録成功: {new_user.username}")
         return redirect(url_for("auth.login"))
     return render_template("register.html", form=form)
+
+@auth_bp.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        current_user.set_password(form.new_password.data)
+        db.session.commit()
+        flash('パスワードを変更しました', 'success')
+        return redirect(url_for('main.index'))
+    return render_template('change_password.html', form=form)
