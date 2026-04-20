@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}しばらくお待ちください{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="card shadow-sm p-5">
+        <h2>⚙️ ただいま準備中です</h2>
+        <p class="text-muted mt-3">しばらく経ってからもう一度お試しください。</p>
+        <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">メインページに戻る</a>
+    </div>
+</div>
+{% endblock %}

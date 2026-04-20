@@ -688,18 +688,16 @@ def exercise(chapter_id):
                 prompt = create_ai_prompt(topic)
                 try:
                     response_text = generate_content(prompt)
-                    if response_text:
-                        cleaned_text = (
-                            response_text.replace("```json", "").replace("```", "").strip()
-                        )
-                        # 成功したらトークンを消費
-                        current_user.api_token_count -= 1
-                        db.session.add(current_user)
-                        db.session.commit()
-                    else:
-                        # APIが空を返した場合の処理（ログ出力やエラーメッセージなど）
+                    if not response_text:
                         print("Gemini API returned None")
-                        # 必要に応じてここで return や エラー処理を入れる
+                        raise ValueError("Empty response")
+
+                    cleaned_text = (
+                        response_text.replace("```json", "").replace("```", "").strip()
+                    )
+                    current_user.api_token_count -= 1
+                    db.session.add(current_user)
+                    db.session.commit()
 
                     quiz_data = json.loads(cleaned_text)
                     # データクレンジング
@@ -733,7 +731,7 @@ def exercise(chapter_id):
                         current_difficulty=difficulty_code,
                         is_mock=is_mock_test,  # 模擬テストフラグを渡す
                     )
-                except (json.JSONDecodeError, KeyError) as e:
+                except (json.JSONDecodeError, KeyError, ValueError) as e:
                     print(
                         f"AI問題の生成に失敗しました: {e}。DB問題にフォールバックします。"
                     )
