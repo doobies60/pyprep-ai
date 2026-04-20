@@ -36,3 +36,9 @@ class LoginForm(FlaskForm):
     remember_me = BooleanField('ログイン状態を保存する')
     
     submit = SubmitField('ログイン')
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('現在のパスワード', validators=[DataRequired()])
+    new_password = PasswordField('新しいパスワード', validators=[DataRequired(), Length(min=6)])
+    confirm_new_password = PasswordField('新しいパスワード（確認）', validators=[DataRequired(), EqualTo('new_password')])
+    submit = SubmitField('パスワードを変更する')
