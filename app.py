@@ -444,19 +444,23 @@ def ai_quiz_by_chapter(chapter_id):
 
     try:
         response_text = generate_content(prompt)
+        if not response_text:
+            raise ValueError("Gemini returned None")
+
+        cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
+
         # ★追加: 成功したらトークンを消費
         current_user.api_token_count -= 1
         db.session.add(current_user)
         db.session.commit()
     except errors.ServerError as e:
-
         print(f"AI API Server Error: {e}")
         flash(
             "AIサーバーが現在大変混み合っています。しばらく時間をおいてから、再度お試しください。",
             "warning",
         )
         return redirect(url_for("incorrect_questions"))
-    except Exception as e:
+    except (ValueError, Exception) as e:
         print(f"AI問題の生成中に予期せぬエラーが発生しました: {e}")
         flash(
             "AI問題の生成中に予期せぬエラーが発生しました。しばらくしてからもう一度お試しください。",
@@ -464,7 +468,6 @@ def ai_quiz_by_chapter(chapter_id):
         )
         return redirect(url_for("incorrect_questions"))
 
-    cleaned_text = response_text.replace("```json", "").replace("```", "").strip()
     try:
         quiz_data = json.loads(cleaned_text)
         # データクレンジング
@@ -602,6 +605,8 @@ def hybrid_quiz():
         prompt = create_ai_prompt(topic)
         try:
             response_text = generate_content(prompt)
+            if not response_text:
+                raise ValueError("Gemini returned None")
             cleaned_text = (
                 response_text.replace("```json", "").replace("```", "").strip()
             )
@@ -631,7 +636,7 @@ def hybrid_quiz():
                     quiz_data.get("explanation_d"),
                 ],
             }
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             # AIの回答が壊れていた時の保険
             print(f"JSONパースエラー: {e}")
             return redirect(url_for("main.index"))
