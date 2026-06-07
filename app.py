@@ -801,6 +801,8 @@ def level_exercise(level):
 
                 try:
                     response_text = generate_content(prompt)
+                    if not response_text:
+                        raise ValueError("Gemini API returned empty response")
                     cleaned_text = (
                         response_text.replace("```json", "").replace("```", "").strip()
                     )
@@ -837,7 +839,7 @@ def level_exercise(level):
                         chapter_id=f"level_{level}",
                         current_level=level,
                     )
-                except (json.JSONDecodeError, KeyError) as e:
+                except (json.JSONDecodeError, KeyError, ValueError) as e:
                     print(
                         f"AI問題の生成に失敗しました: {e}。DB問題にフォールバックします。"
                     )
